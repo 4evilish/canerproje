@@ -1,0 +1,67 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: taskmanagercaner
+  DOTNET_VERSION: '9.0.x'
+  NODE_VERSION: '20.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: 📦 Install Frontend dependencies
+      working-directory: ./Frontend
+      run: npm ci
+
+    - name: 🏗️ Build Frontend
+      working-directory: ./Frontend
+      run: npm run build
+
+    - name: 📋 Copy Frontend to Backend wwwroot
+      run: |
+        rm -rf Backend/TaskManager.API/wwwroot
+        cp -r Frontend/dist Backend/TaskManager.API/wwwroot
+
+    - name: 🏗️ Restore Backend dependencies
+      working-directory: ./Backend/TaskManager.API
+      run: dotnet restore
+
+    - name: 🏗️ Build Backend
+      working-directory: ./Backend/TaskManager.API
+      run: dotnet build --configuration Release --no-restore
+
+    - name: 📦 Publish Backend
+      working-directory: ./Backend/TaskManager.API
+      run: dotnet publish --configuration Release --no-build --output ./publish
+
+    - name: 🚀 Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ./Backend/TaskManager.API/publish
+
+    - name: ✅ Deployment Complete
+      run: |
+        echo "🎉 Deployment successful!"
+        echo "🌐 App URL: https://taskmanagercaner-dbbsggd3b5a5djdr.westeurope-01.azurewebsites.net"
