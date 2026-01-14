@@ -1,0 +1,36 @@
+# Build results
+**/bin/
+**/obj/
+**/publish/
+**/*.zip
+
+# Frontend
+**/node_modules/
+**/dist/
+
+# IDE
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Azure
+*.pubxml
+*.azurePubxml
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite
+
+# Environment files
+**/.env
+**/appsettings.Development.json
